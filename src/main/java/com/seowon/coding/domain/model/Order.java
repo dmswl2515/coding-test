@@ -60,6 +60,48 @@ public class Order {
                 .map(OrderItem::getSubtotal)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
+
+    public void addProduct(Product product, int quantity) {
+        // 1. 검증
+        if (quantity <= 0) {
+            throw new IllegalArgumentException("quantity must be positive: " + quantity);
+        }
+        if (product.getStockQuantity() < quantity) {
+            throw new IllegalStateException("insufficient stock for product " + product.getId());
+        }
+
+        // 2. OrderItem 생성
+        OrderItem item = OrderItem.builder()
+                .order(this)
+                .product(product)
+                .quantity(quantity)
+                .price(product.getPrice())
+                .build();
+        // 3. 추가(자동으로 총액 재계산)
+        this.addItem(item);
+
+        // 4. 재고 감소
+        product.decreaseStock(quantity);
+    }
+
+    public void applyShippingAndDiscount(String couponCode) {
+        // 현재 총액 (상품 합계)
+        BigDecimal itemsTotal = this.totalAmount;
+
+        // 배송비 계산
+        BigDecimal shipping = itemsTotal.compareTo(new BigDecimal("100.00")) >= 0
+                                                    ? BigDecimal.ZERO
+                                                    : new BigDecimal("5.00");
+
+        // 할인 계산
+        BigDecimal discount = (couponCode != null && couponCode.startsWith("SALE"))
+                                ? new BigDecimal("10.00")
+                                : BigDecimal.ZERO;
+
+        // 최종 금액 = 상품 합계 + 배송비 - 할인
+        this.totalAmount = itemsTotal.add(shipping).subtract(discount);
+
+    }
     
     public void markAsProcessing() {
         this.status = OrderStatus.PROCESSING;
