@@ -29,7 +29,7 @@ public class Order {
 
     private Long productId;
 
-    private Long quantity;
+    private Integer quantity;
 
     @Enumerated(EnumType.STRING)
     private OrderStatus status;

@@ -55,16 +55,54 @@ public class OrderService {
 
 
 
-    public Order placeOrder(String customerName, String customerEmail, List<Long> productIds, List<Integer> quantities) {
+    public Order placeOrder(String customerName,
+                            String customerEmail,
+                            List<Long> productIds,
+                            List<Integer> quantities) {
         // TODO #3: 구현 항목
-        // * 주어진 고객 정보로 새 Order를 생성
-        // * 지정된 Product를 주문에 추가
-        // * order 의 상태를 PENDING 으로 변경
-        // * orderDate 를 현재시간으로 설정
-        // * order 를 저장
-        // * 각 Product 의 재고를 수정
         // * placeOrder 메소드의 시그니처는 변경하지 않은 채 구현하세요.
-        return null;
+        if(customerName == null || customerEmail == null) {
+            throw new IllegalArgumentException("customer info required");
+        }
+        // * 주어진 고객 정보로 새 Order를 생성
+        Order order = Order.builder()
+                .customerName(customerName)
+                .customerEmail(customerEmail)
+                .status(Order.OrderStatus.PENDING) // * order 의 상태를 PENDING 으로 변경
+                .orderDate(LocalDateTime.now())    // * orderDate 를 현재시간으로 설정
+                .items(new ArrayList<>())
+                .totalAmount(BigDecimal.ZERO)
+                .build();
+
+        // * 지정된 Product를 주문에 추가
+        BigDecimal subtotal = BigDecimal.ZERO;
+        for (int i = 0; i < productIds.size() ; i++) {
+            Long pid = productIds.get(i);
+            Integer qty = quantities.get(i);
+
+            Product product = productRepository.findById(pid)
+                    .orElseThrow(() -> new IllegalArgumentException("Product not found: " + pid));
+            if (qty <= 0) {
+                throw new IllegalArgumentException("quantity must be positive: " + qty);
+            }
+            if (product.getStockQuantity() < qty) {
+                throw new IllegalStateException("insufficient stock for product " + pid);
+            }
+
+            // * order 를 저장
+            OrderItem item = OrderItem.builder()
+                    .order(order)
+                    .product(product)
+                    .quantity(qty)
+                    .price(product.getPrice())
+                    .build();
+            order.getItems().add(item);
+
+            // * 각 Product 의 재고를 수정
+            product.decreaseStock(qty);
+            subtotal = subtotal.add(product.getPrice().multiply(BigDecimal.valueOf(qty)));
+        }
+        return orderRepository.save(order);
     }
 
     /**
