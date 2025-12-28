@@ -1,6 +1,8 @@
 package com.seowon.coding.controller;
 
+import com.seowon.coding.domain.dto.OrderDto;
 import com.seowon.coding.domain.model.Order;
+import com.seowon.coding.service.OrderProduct;
 import com.seowon.coding.service.OrderService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -66,13 +68,24 @@ public class OrderController {
      *   ]
      * }
      */
-    @PutMapping("/{id}")
-    public ResponseEntity<Order> placeOrder(@PathVariable Long id,
-                                            @RequestBody String customerName, String customerEmail,
-                                                                List<Long> productIds, List<Integer> quantities) {
+    @PostMapping("/")
+    public ResponseEntity<Order> placeOrder(@RequestBody OrderDto orderDto) {
         try {
-            Order placeOrder = orderService.placeOrder(customerName, customerEmail, productIds, quantities);
-            return ResponseEntity.ok(placeOrder);
+            // DTO에서 데이터 추출
+            List<Long> productsId = orderDto.getProducts().stream()
+                    .map(OrderProduct::getProductId)
+                    .toList();
+            List<Integer> quantities = orderDto.getProducts().stream()
+                    .map(OrderProduct::getQuantity)
+                    .toList();
+
+            Order order = orderService.placeOrder(
+                    orderDto.getCustomerName(),
+                    orderDto.getCustomerEmail(),
+                    productsId,
+                    quantities
+            );
+            return new ResponseEntity<>(order, HttpStatus.CREATED);
         } catch (RuntimeException e) {
             return ResponseEntity.notFound().build();
         }
