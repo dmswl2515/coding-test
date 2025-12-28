@@ -26,7 +26,11 @@ public class Order {
     private String customerName;
     
     private String customerEmail;
-    
+
+    private Long productId;
+
+    private Long quantity;
+
     @Enumerated(EnumType.STRING)
     private OrderStatus status;
     

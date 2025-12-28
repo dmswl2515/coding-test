@@ -66,5 +66,29 @@ public class OrderController {
      *   ]
      * }
      */
+    @PutMapping("/{id}")
+    public ResponseEntity<Order> placeOrder(@PathVariable Long id,
+                                            @RequestBody String customerName, String customerEmail,
+                                                                List<Long> productIds, List<Integer> quantities) {
+        try {
+            Order placeOrder = orderService.placeOrder(customerName, customerEmail, productIds, quantities);
+            return ResponseEntity.ok(placeOrder);
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
     //
 }
