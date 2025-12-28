@@ -74,6 +74,7 @@ public class OrderService {
                 .totalAmount(BigDecimal.ZERO)
                 .build();
 
+
         // * 지정된 Product를 주문에 추가
         BigDecimal subtotal = BigDecimal.ZERO;
         for (int i = 0; i < productIds.size() ; i++) {
@@ -96,12 +97,13 @@ public class OrderService {
                     .quantity(qty)
                     .price(product.getPrice())
                     .build();
-            order.getItems().add(item);
+            order.addItem(item);
 
             // * 각 Product 의 재고를 수정
             product.decreaseStock(qty);
             subtotal = subtotal.add(product.getPrice().multiply(BigDecimal.valueOf(qty)));
         }
+        order.setTotalAmount(subtotal);
         return orderRepository.save(order);
     }
 
@@ -151,7 +153,7 @@ public class OrderService {
                     .quantity(qty)
                     .price(product.getPrice())
                     .build();
-            order.getItems().add(item);
+            order.addItem(item);
 
             product.decreaseStock(qty);
             subtotal = subtotal.add(product.getPrice().multiply(BigDecimal.valueOf(qty)));
